@@ -1,0 +1,39 @@
+site_name: Suspicious Photo Detection Docs
+site_description: "Suspicious Photo Detection (SPD) - batch ML pipeline for flagging visually inconsistent outlet verification images. Engineering documentation."
+repo_url: https://github.com/Mushfiqur-Rahman-Robin/suspicious-photo-detection
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+
+nav:
+  - Home: index.md
+  - Product:
+      - SPEC (what we build): SPEC.md
+  - Design:
+      - ARCHITECTURE (how it fits): ARCHITECTURE.md
+      - SYSTEM DESIGN (entities + sequences): SYSTEM_DESIGN.md
+  - Delivery:
+      - PLANNING (delivery plan): PLANNING.md
+      - TASKS (task breakdown): TASKS.md
+  - Decisions:
+      - ENGINEERING DECISIONS (ADR log): ENGINEERING_DECISIONS.md
+  - Guides:
+      - MUST DO CHECKS (session checklist): MUST_DO_CHECKS.md
+  - Changelog: CHANGELOG.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
