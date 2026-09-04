@@ -39,6 +39,14 @@ spd run --dataset data/dataset --output results
 spd run --dataset data/dataset --output results --device cuda   # or cpu / mps
 ```
 
+> **GPU note:** the installed PyPI torch build targets CUDA 13. CUDA only
+> activates when the NVIDIA driver supports CUDA 13 **and** the GPU has compute
+> capability >= 7.5 (Turing or newer, e.g. RTX 20-series+). Older GPUs and
+> older drivers silently run on CPU via `DEVICE=auto`; to avoid downloading the
+> multi-GB CUDA wheels on such hosts, install the CPU build instead:
+> `pip install -e .` with `torch`/`torchvision` taken from the PyTorch CPU index
+> (`https://download.pytorch.org/whl/cpu`). Results are bit-identical either way.
+
 Stage isolation / resume:
 
 ```bash

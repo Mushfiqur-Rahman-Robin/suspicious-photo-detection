@@ -32,6 +32,11 @@
 # (embedding output is bit-identical; only the compute backend differs).
 # Trade-off: the CUDA wheels make the image several GB larger than a CPU-only
 # build would be.
+#
+# GPU prerequisite: the PyPI CUDA-13 torch wheels activate only on a driver
+# that supports CUDA 13 and a GPU with compute capability >= 7.5 (Turing+).
+# Older hosts fall back to CPU automatically; for a smaller image there you
+# would build with `torch`/`torchvision` from the PyTorch CPU index instead.
 # ---------------------------------------------------------------------------
 
 ARG SPD_VERSION=0.1.0
