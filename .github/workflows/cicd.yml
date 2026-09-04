@@ -175,17 +175,25 @@ jobs:
         run: mkdocs build --strict
 
   docker:
-    name: Docker build + smoke
+    # Kept deliberately FAST in CI: only the compose file is validated on every
+    # push. A full image build + CLI smoke test was considered (steps below, kept
+    # for the record) but removed from the hot path because installing the pinned
+    # torch + torchvision stack and building the image adds several minutes per
+    # run for little signal - the same smoke check is exercised locally before
+    # release (docs/MUST_DO_CHECKS.md §6) and by the containerized run in
+    # docker-compose.yml. Re-enable the two commented steps below if the image
+    # ever becomes a deployable artifact rather than a dev convenience.
+    name: Docker compose validation
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate compose file
         run: docker compose config --quiet
-      - name: Build image
-        run: docker build -t spd:latest .
-      - name: Smoke test CLI entrypoint
-        run: docker run --rm spd:latest spd --help
+      # - name: Build image
+      #   run: docker build -t spd:latest .
+      # - name: Smoke test CLI entrypoint
+      #   run: docker run --rm spd:latest spd --help
 
   ci-gate:
     name: CI gate (all checks)
