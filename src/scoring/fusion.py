@@ -13,6 +13,20 @@ import numpy as np
 from core.exceptions import DetectionError
 
 
+def _normalized_weights(raw_weights: np.ndarray) -> np.ndarray:
+    """Renormalize fusion weights to sum to one, rejecting all-zero inputs.
+
+    A degenerate all-zero weight vector (every configured signal unavailable or
+    zero-weighted) would divide 0/0 and leak NaN into the fused scores,
+    violating the score-in-[0,1] contract; fail fast with a DetectionError.
+    """
+    if raw_weights.sum() == 0:
+        raise DetectionError(
+            "fusion weights are all zero; configure a positive signal weight"
+        )
+    return np.asarray(raw_weights / raw_weights.sum())
+
+
 def fused_suspicion_scores(
     centroid_distance: np.ndarray,
     knn_consensus: np.ndarray,
@@ -30,8 +44,9 @@ def fused_suspicion_scores(
     the fusion always sums to 1 and stays comparable across outlets.
     """
     if isolation_forest is None:
-        weights = np.array([centroid_weight, knn_weight], dtype=np.float64)
-        weights = weights / weights.sum()
+        weights = _normalized_weights(
+            np.array([centroid_weight, knn_weight], dtype=np.float64)
+        )
         fused = weights[0] * centroid_distance + weights[1] * knn_consensus
     else:
         if isolation_forest.shape != centroid_distance.shape:
@@ -41,11 +56,12 @@ def fused_suspicion_scores(
             if min_images_for_isolation_forest <= 0
             else min(1.0, image_count / min_images_for_isolation_forest)
         )
-        weights = np.array(
-            [centroid_weight, knn_weight, isolation_forest_weight * scale],
-            dtype=np.float64,
+        weights = _normalized_weights(
+            np.array(
+                [centroid_weight, knn_weight, isolation_forest_weight * scale],
+                dtype=np.float64,
+            )
         )
-        weights = weights / weights.sum()
         fused = (
             weights[0] * centroid_distance
             + weights[1] * knn_consensus

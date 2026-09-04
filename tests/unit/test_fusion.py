@@ -88,3 +88,17 @@ def test_shape_mismatch_raises():
             5,
             10,
         )
+
+
+def test_all_zero_weights_raise():
+    with pytest.raises(DetectionError):
+        fused_suspicion_scores(
+            np.array([1.0]),
+            np.array([0.0]),
+            None,
+            centroid_weight=0.0,
+            knn_weight=0.0,
+            isolation_forest_weight=1.0,
+            image_count=2,
+            min_images_for_isolation_forest=10,
+        )
