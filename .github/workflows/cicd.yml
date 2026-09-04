@@ -141,7 +141,7 @@ jobs:
           exit-code: "1"
           format: table
       - name: Install detect-secrets
-        run: uv pip install --system detect-secrets
+        run: uv pip install --system detect-secrets==1.5.0
       - name: Secrets scan
         run: |
           if [ -f .secrets.baseline ]; then

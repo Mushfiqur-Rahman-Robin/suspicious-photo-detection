@@ -120,6 +120,10 @@ All notable changes to this project are documented here. Format follows
   CUDA-13 torch wheels need a driver that supports CUDA 13 and a compute
   capability >= 7.5 GPU; older hosts fall back to CPU automatically (or install
   the CPU wheel from the PyTorch CPU index).
+- CI Security job green again: `.secrets.baseline` refreshed after the
+  `SIMILARITY_METRIC` edit shifted the DINOv2-SHA finding's line number, and
+  `detect-secrets` is pinned to `1.5.0` in the workflow so the baseline and the
+  hook can never drift apart again.
 
 ### Added (baseline, planning phase)
 - `docs/SPEC.md` - behavioral contracts, FR1-FR10, strict output schema (§6),
