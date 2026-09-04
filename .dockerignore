@@ -1,0 +1,43 @@
+# Version control & CI
+.git
+.github
+.gitattributes
+.gitignore
+
+# Local secrets (never bake into an image)
+.env
+.env.*
+!.env.example
+.secrets.baseline
+
+# Dataset (large binaries; mounted at runtime, not baked into the image)
+data
+results
+cache
+
+# Python artifacts
+**/__pycache__
+**/*.pyc
+.venv
+.python-version
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+coverage.xml
+pytest-report.xml
+htmlcov
+
+# Docs, site, and planning material not needed at runtime
+docs
+site
+mkdocs.yml
+project_docs
+*.md
+
+# Tooling / agents config
+.agents
+.pre-commit-config.yaml
+docker-compose.yml
+Dockerfile
+.dockerignore
