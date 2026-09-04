@@ -5,7 +5,7 @@
 - **Version:** 1.0.0
 - **Status:** Authoritative record of system design
 - **Read before writing any code that touches a module boundary, data flow, external dependency, or the output schema** (see §9 for the review checklist).
-- **Companion docs:** `docs/SPEC.md` (behavioral contracts), `docs/PLANNING.md` (delivery plan), `docs/ENGINEERING_DECISIONS.md` (decision log & best-practice record), `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf` (product source of truth).
+- **Companion docs:** `docs/SPEC.md` (behavioral contracts), `docs/PLANNING.md` (delivery plan), `docs/ENGINEERING_DECISIONS.md` (decision log & best-practice record), `project_docs/Suspicious_Photo_Detection_PRD.pdf` (product source of truth).
 
 ---
 

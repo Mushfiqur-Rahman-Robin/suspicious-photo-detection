@@ -4,7 +4,7 @@
 
 - **Status:** Design artifact - entity/class diagram + pipeline + sequence diagrams (rendered images).
 - **Derived from:** `docs/SPEC.md` §5-§6 (behavior, output schema), §10-§12 (scoring + detection), `docs/ARCHITECTURE.md` §6 (data flow).
-- **Source of truth:** `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf`. Where this doc and the PRD/SPEC differ, the PRD wins (SPEC §0).
+- **Source of truth:** `project_docs/Suspicious_Photo_Detection_PRD.pdf`. Where this doc and the PRD/SPEC differ, the PRD wins (SPEC §0).
 - **Companion docs:** `docs/SPEC.md`, `docs/ARCHITECTURE.md`, `docs/PLANNING.md`.
 - **Diagram sources:** Mermaid `.mmd` files live alongside the images in `docs/assets/` for regeneration.
 

@@ -6,7 +6,65 @@ All notable changes to this project are documented here. Format follows
 
 ## [Unreleased]
 
-### Added
+### Added (pipeline implementation, Phases 1-5)
+- Working `spd` CLI (`run`/`embed`/`detect`/`report`) with a model-agnostic
+  `Embedder` port (DINOv2 ViT-S/14 default; CLIP as the optional `clip` extra),
+  content-addressed `.npy` embedding cache, cosine-similarity scoring, robust
+  centroid + kNN + seeded Isolation Forest signals, `median + k*MAD` adaptive
+  threshold with a score floor, deterministic reason templates, strict Pydantic
+  output schema (SPEC §6.1), JSON + CSV results, `run_summary.json` KPIs, and a
+  one-page `write_up.md`.
+- `src/` module tree: `config`, `core`, `embedding`, `scoring`, `detection`,
+  `pipeline`, `io_layer`, `reporting`, `cli`, `observability`.
+- Unit + integration + reproducibility test suite (186 tests, ~95% coverage) covering
+  config, schema, loader, cache, scoring, detection, embedders, pipeline, CLI, and
+  determinism (two identical runs, cold vs warm cache byte-identical).
+- `scripts/run_evaluation.py` - synthetic-golden precision/recall/F1 report generator
+  writing `results/evaluation.md` (SPEC §16).
+- `results/` artifacts from the full-dataset run: `results.json` (159 outlets /
+  2,042 images), `results.csv`, `run_summary.json`, `write_up.md`, `evaluation.md`.
+- Structured file logging: every run now also writes machine-readable JSON log
+  lines to `logs/spd.log` (new `LOG_DIR` setting; `logs/` is gitignored), in
+  addition to the human-readable console output. Level filtering is shared
+  between console and file.
+
+### Changed (pipeline implementation)
+- `src/io` module renamed to **`io_layer`**: a top-level package named `io` cannot be
+  imported at runtime because the stdlib `io` module is always resident in
+  `sys.modules`. `io_layer` is the same module ARCHITECTURE §4 calls "io".
+- DINOv2 default embedder now loads the official ViT-S/14 weights through `torch.hub`
+  pinned to a fixed commit SHA, because torchvision 0.29 removed DINOv2 from its
+  `models` module. The pinned SHA is part of the embedding-cache key (ED-6).
+- `.github/workflows/cicd.yml` docker job reduced to compose-file validation only; the
+  full image build + CLI smoke steps are kept commented with rationale (fast CI).
+- pytest `pythonpath` now includes `src` so the flat top-level packages import in tests.
+- `.env.example` mirrors every `Settings` field; `cache/` added to `.gitignore`.
+- `docs/TASKS.md` - all Phase 0-5 tasks ticked as implemented with evidence.
+- Combined centroid + kNN reason now reads exactly `"Distinct background and
+  signage compared to the rest of the series"` - matching the PRD example
+  wording verbatim (the flag output never referenced it before, but the schema
+  example and PRD both use "and").
+- The one-page `write_up.md` and the `evaluation.md` report are now written in
+  plain, self-contained prose: internal ED-xx / Spec cross-references were
+  removed from the submitted deliverables while the method, rationale,
+  trade-offs, scalability, and limitations are described in full detail.
+- The PRD file was renamed to `project_docs/Suspicious_Photo_Detection_PRD.pdf`
+  and every reference across the repo updated; `.env` re-synced to the current
+  `.env.example` (placeholders only).
+
+### Fixed (pipeline implementation)
+- Docker image now installs the project package itself, so the `spd` console
+  script exists inside the container (`spd run`/`embed`/`detect`/`report`
+  work as documented). The runtime image pre-creates `/app/results`, `/app/cache`
+  and `/app/logs` owned by the non-root user, and `docker-compose.yml` mounts
+  `./logs` alongside `./data`, `./results`, and `./cache`.
+- The container builds from a CPU-only lockfile (`requirements-docker.in` /
+  `requirements-docker.txt`): same pinned torch 2.14.0 / torchvision 0.29.0
+  versions but the CPU wheels, so the image is ~1.5 GB instead of the multi-GB
+  CUDA stack that the PyPI default torch build would pull in. Batch inference
+  already runs on CPU, so results are identical.
+
+### Added (baseline, planning phase)
 - `docs/SPEC.md` - behavioral contracts, FR1-FR10, strict output schema (§6),
   similarity + outlier-detection specification (§10-§12), coding standards (§20).
 - `docs/ARCHITECTURE.md` - pipeline component map, key design decisions, module
@@ -24,7 +82,7 @@ All notable changes to this project are documented here. Format follows
   + ruff/mypy/pyright/pytest/coverage/bandit/vulture/commitizen configuration.
 - `AGENTS.md` - project-specific engineering conventions, product facts, and verification gates.
 
-### Changed
+### Changed (baseline, planning phase)
 - `AGENTS.md` expanded with the project's read-first table, repository layout,
   loadable-skill index, product facts, and working agreements (no standing rule removed).
 - Dataset facts corrected repo-wide: image count 2,359 → 2,042, median 13 → 12

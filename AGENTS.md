@@ -2,7 +2,7 @@
 
 **Suspicious Photo Detection in Outlet Verification Images.** A batch ML pipeline that, given an outlet's accumulated photo history (one folder per outlet, no timestamps), flags the images that are visually inconsistent with that outlet's overall appearance - so thousands of field-agent verification photos can be triaged without a human looking at most of them.
 
-**Current status: planning/design phase.** This repo currently contains specifications and standards only - no pipeline code yet. Do not invent implementation details that contradict `docs/SPEC.md` or `docs/ARCHITECTURE.md`.
+**Current status: implemented.** This repo contains the specifications/standards (which remain authoritative - `docs/SPEC.md` and `docs/ARCHITECTURE.md` are the source of truth) plus the working pipeline under `src/` with unit + integration tests, the CLI (`spd`), and run artifacts under `results/`. Do not invent implementation details that contradict `docs/SPEC.md` or `docs/ARCHITECTURE.md`.
 
 ---
 
@@ -10,7 +10,7 @@
 
 | Doc | Role |
 |---|---|
-| `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf` | Product source of truth. Where PRD and SPEC differ, the PRD wins unless SPEC records an approved Engineering Decision (ED-xx). |
+| `project_docs/Suspicious_Photo_Detection_PRD.pdf` | Product source of truth. Where PRD and SPEC differ, the PRD wins unless SPEC records an approved Engineering Decision (ED-xx). |
 | `docs/SPEC.md` | **What we build** - behavioral contracts, FR1-FR10, data/output schema (§6), similarity + outlier-detection spec (§10-§12), coding standards (§20). |
 | `docs/ARCHITECTURE.md` | **How it fits together** - pipeline component map, key design decisions, module boundaries, data flow. |
 | `docs/SYSTEM_DESIGN.md` | **Design diagrams** - entity/class diagram + pipeline + sequence diagrams (rendered in `docs/assets/`). |
@@ -37,15 +37,18 @@ docs/
   assets/                Mermaid sources (.mmd) + rendered images (.svg)
 .agents/skills/coding-rules/  30 skills, one folder per skill: <name>/SKILL.md
 project_docs/
-  AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf   product PRD (source of truth)
+  Suspicious_Photo_Detection_PRD.pdf   product PRD (source of truth)
 data/
   dataset/               outlet photo folders (one folder = one outlet; gitignored)
-src/                     pipeline source (flat layout, planned)
-tests/                   unit + integration tests (planned)
+results/                 run artifacts: results.json/csv, run_summary.json, write_up.md, evaluation.md
+logs/                    structured JSON log output per run (gitignored)
+src/                     pipeline source (flat layout; implemented - see layout below)
+tests/                   unit + integration tests (mirror src/)
+scripts/                 supporting scripts (e.g. synthetic-golden evaluation)
 pyproject.toml           project metadata + dependency groups + tool config
 ```
 
-Planned source layout (from ARCHITECTURE §4, created under `src/`): `src/{config, core, embedding, scoring, detection, pipeline, io, reporting, cli, observability}` - a flat, single-package pipeline, not a web service.
+Implemented source layout (from ARCHITECTURE §4): `src/{config, core, embedding, scoring, detection, pipeline, io_layer, reporting, cli, observability}` - a flat, single-package pipeline, not a web service. The I/O module is named **`io_layer`** (not `io`) because the stdlib `io` module is always resident in `sys.modules`, which makes a top-level package literally named `io` unimportable at runtime. `io_layer` is the same module ARCHITECTURE §4 calls "io".
 
 ---
 

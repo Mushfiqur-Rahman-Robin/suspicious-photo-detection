@@ -4,7 +4,7 @@
 
 - **Version:** 1.0.0
 - **Status:** Approved for execution
-- **Related docs:** `docs/SPEC.md` (what we build), `docs/ARCHITECTURE.md` (how it fits together), `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf` (source of truth). All engineering standards in `.agents/skills/coding-rules/` apply.
+- **Related docs:** `docs/SPEC.md` (what we build), `docs/ARCHITECTURE.md` (how it fits together), `project_docs/Suspicious_Photo_Detection_PRD.pdf` (source of truth). All engineering standards in `.agents/skills/coding-rules/` apply.
 
 ---
 

@@ -10,8 +10,28 @@ of them.
 
 ## Status
 
-Planning/design phase. This repository currently contains specifications and
-standards only - no pipeline code yet.
+Implemented. This repository contains the specifications/standards (which
+remain authoritative - `docs/SPEC.md` and `docs/ARCHITECTURE.md` are the source
+of truth), the working pipeline under `src/`, unit + integration tests, the
+`spd` CLI, and run artifacts under `results/`.
+
+## Quick start
+
+```bash
+# Full pipeline on the default dataset (embeddings are cached, re-runs are free):
+.venv/bin/spd run --dataset data/dataset --output results
+
+# Stage isolation / resume:
+.venv/bin/spd embed   --dataset data/dataset
+.venv/bin/spd detect  --dataset data/dataset
+.venv/bin/spd report  --output results
+
+# Synthetic-golden precision/recall/F1 report (SPEC §16):
+PYTHONPATH=src .venv/bin/python -m scripts.run_evaluation --output results
+```
+
+Verification gates (lint, type-check, tests, dead code, security, docs) and
+the full gate list live in `docs/MUST_DO_CHECKS.md` §1.
 
 ## Repository layout
 
@@ -29,8 +49,11 @@ docs/
 AGENTS.md              engineering conventions and working agreements
 project_docs/          PRD (source of truth)
 data/dataset/          outlet photo folders (gitignored)
-src/                   pipeline source (flat layout, planned)
-tests/                 unit + integration tests (planned)
+results/               run artifacts: results.json/csv, run_summary.json, write_up.md, evaluation.md
+logs/                  structured JSON logs per run (gitignored)
+src/                   pipeline source (flat layout; see AGENTS.md)
+tests/                 unit + integration tests (mirror src/)
+scripts/               supporting scripts (e.g. synthetic-golden evaluation)
 .agents/skills/        loadable engineering skills (coding rules)
 ```
 
@@ -38,7 +61,7 @@ tests/                 unit + integration tests (planned)
 
 Read these in order:
 
-1. `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf` - product PRD (source of truth)
+1. `project_docs/Suspicious_Photo_Detection_PRD.pdf` - product PRD (source of truth)
 2. `docs/SPEC.md` - what we build
 3. `docs/ARCHITECTURE.md` - how it fits together
 4. `docs/SYSTEM_DESIGN.md` - entities + pipeline + sequence diagrams
@@ -47,13 +70,6 @@ Read these in order:
 7. `docs/CHANGELOG.md` - change history
 
 The same documents are published as an mkdocs site (`mkdocs.yml`, content under `docs/`).
-
-## Roadmap
-
-- [x] Planning/design phase - specs, architecture, delivery plan, diagrams
-- [ ] Embedding layer (model-agnostic: DINOv2 default, CLIP alternate) + cache
-- [ ] Scoring (cosine + centroid + kNN) and detection (ensemble + adaptive threshold)
-- [ ] Pipeline + CLI (`spd`) + JSON/CSV output + write-up
 
 ## Disclaimer
 

@@ -3,7 +3,7 @@
 **Suspicious Photo Detection in Outlet Verification Images.**
 
 - **Status:** Authoritative decision log (ADR-style) + best-practice record.
-- **Source of truth:** `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf`. PRD wins over this document and `docs/SPEC.md` unless an Engineering Decision (ED-xx) is recorded here and registered in SPEC §9.
+- **Source of truth:** `project_docs/Suspicious_Photo_Detection_PRD.pdf`. PRD wins over this document and `docs/SPEC.md` unless an Engineering Decision (ED-xx) is recorded here and registered in SPEC §9.
 - **Companion docs:** `docs/SPEC.md` (§9 is the normative ED-xx registry), `docs/ARCHITECTURE.md`, `docs/PLANNING.md`, `docs/SYSTEM_DESIGN.md`.
 - **Convention:** decisions use RFC 2119 (MUST/SHOULD/MAY); each entry records Context → Decision → Rationale → Consequences. ED-xx IDs here are identical to those in SPEC §9.
 
@@ -15,7 +15,7 @@ This document records (a) the engineering decisions that shape the system and (b
 
 ## 2. Governance Model
 
-- **Product source of truth:** `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf`. The PRD wins over every other artifact unless an approved ED-xx extends it.
+- **Product source of truth:** `project_docs/Suspicious_Photo_Detection_PRD.pdf`. The PRD wins over every other artifact unless an approved ED-xx extends it.
 - **Normative technical spec:** `docs/SPEC.md`. Every decision MUST be registered in SPEC §9 (ED-xx) before it is acted on in code or diagrams.
 - **This document:** rationale, best practices, and consequences behind each ED-xx.
 - **Traceability:** each decision references the PRD deliverable it addresses and the SPEC section it affects; SPEC §24 is the coverage matrix.

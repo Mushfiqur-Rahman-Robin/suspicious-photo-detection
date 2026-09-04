@@ -45,6 +45,9 @@ every iteration without being reminded:
     model-agnostic embedder port (ED-1). Never weaken these silently.
 14. **Be harshly self-critical**: grill, re-verify multiple times, surface
     gaps proactively rather than declaring things "perfect".
+15. **Production framing**: present this project (code, docs, comments, commit
+    messages) as a production-quality engineering project on its own terms -
+    the professional, standalone standard it stands for.
 
 ### Self-maintenance protocol (this file updates itself)
 
@@ -101,6 +104,12 @@ and record the gap in the PR.
   update that exact file.
 - Method is unsupervised and per-outlet (no global template, no labels);
   gradual change is legitimate; model-agnostic embedder only.
+- The I/O module is importable as **`io_layer`**, not `io` (stdlib `io` is
+  always resident in `sys.modules`, so a top-level package named `io` is
+  unimportable); `io_layer` is what ARCHITECTURE §4 calls "io".
+- The DINOv2 default embedder loads ViT-S/14 weights via `torch.hub` pinned
+  to a fixed commit SHA (torchvision 0.29 removed DINOv2); the SHA is part of
+  the embedding-cache key.
 
 ## 3. Documentation duties (same session as the change, not later)
 
@@ -147,6 +156,8 @@ gh run list -L 3 --json conclusion,status,headSha \
   run with a warm cache → identical output (ED-6).
 - Confirm `suspicion_score` ∈ `[0,1]`, `flagged_images` empty (not omitted)
   for clean outlets, and every outlet present exactly once (SPEC §6.1).
+- Every run writes structured JSON logs to `logs/spd.log` (`LOG_DIR`); the
+  level is shared with the console (INFO by default, DEBUG with `--verbose`).
 
 ## 6. Docker hygiene
 

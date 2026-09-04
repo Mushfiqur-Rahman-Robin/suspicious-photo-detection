@@ -18,7 +18,7 @@ Read the core documents in order:
 6. [CHANGELOG (change history)](CHANGELOG.md)
 
 The product source of truth is
-`project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf`.
+`project_docs/Suspicious_Photo_Detection_PRD.pdf`.
 
 > This is an unsupervised anomaly-detection pipeline, not a human review
 > system. Outlets are compared to themselves; gradual change is legitimate and

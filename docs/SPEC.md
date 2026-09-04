@@ -6,7 +6,7 @@
 - **Status:** Draft (approved for planning)
 - **Type:** Technical Specification (blueprint for developers)
 - **Author:** Tech Lead
-- **Source of truth:** `project_docs/AI_Engineer_Assignment_Suspicious_Photo_Detection_PRD.pdf`. This SPEC MUST NOT contradict the PRD. Where the PRD and this SPEC differ, the PRD wins unless this SPEC explicitly records an Engineering Decision approved by the Tech Lead.
+- **Source of truth:** `project_docs/Suspicious_Photo_Detection_PRD.pdf`. This SPEC MUST NOT contradict the PRD. Where the PRD and this SPEC differ, the PRD wins unless this SPEC explicitly records an Engineering Decision approved by the Tech Lead.
 - **Companion documents:** `docs/PLANNING.md` (delivery plan), `docs/ARCHITECTURE.md` (system design record), `docs/ENGINEERING_DECISIONS.md` (decision log & best-practice record), `.agents/skills/coding-rules/` (mandatory engineering standards), `.agents/personal-workflow/` (personal recurring instructions).
 
 ---
