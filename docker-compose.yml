@@ -1,0 +1,20 @@
+# Suspicious Photo Detection (SPD) - reproducible container run.
+#
+# This pipeline needs NO database or cache service (SPEC §2.2, ED-8): the only
+# "stack" is the app image plus host-mounted dataset/results/cache directories.
+# Bring it up to run the pipeline inside the container without a local env:
+#
+#   docker compose up --build
+#
+# Results land in ./results, the embedding cache in ./cache, on the host.
+services:
+  spd:
+    build: .
+    image: spd:latest
+    volumes:
+      # Dataset is read-only (never mutated by the pipeline).
+      - ./data:/app/data:ro
+      - ./results:/app/results
+      - ./cache:/app/cache
+    working_dir: /app
+    command: spd run --dataset data/dataset --output results
