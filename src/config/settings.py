@@ -27,6 +27,12 @@ class EmbeddingModel(StrEnum):
     CLIP = "clip"
 
 
+class SimilarityMetric(StrEnum):
+    """Similarity functions accepted by ``SIMILARITY_METRIC`` (SPEC §10.2)."""
+
+    COSINE = "cosine"
+
+
 class DeviceKind(StrEnum):
     """Compute devices accepted by ``DEVICE`` / ``--device``."""
 
@@ -89,7 +95,7 @@ class Settings(BaseSettings):
     random_seed: int = 42
 
     # --- Scoring (SPEC §22.2, §10.3) ----------------------------------------
-    similarity_metric: str = "cosine"
+    similarity_metric: SimilarityMetric = SimilarityMetric.COSINE
     k_neighbors: int = 5
     centroid_weight: float = 1.0 / 3.0
     knn_weight: float = 1.0 / 3.0
