@@ -191,9 +191,9 @@ jobs:
       - name: Validate compose file
         run: docker compose config --quiet
       # - name: Build image
-      #   run: docker build -t spd:latest .
+      #   run: docker build -t spd:0.1.0 .
       # - name: Smoke test CLI entrypoint
-      #   run: docker run --rm spd:latest spd --help
+      #   run: docker run --rm spd:0.1.0 --help
 
   ci-gate:
     name: CI gate (all checks)

@@ -10,13 +10,32 @@
 # Results land in ./results, the embedding cache in ./cache, and structured
 # logs in ./logs, on the host.
 #
+# Image tagging: the image is tagged with the concrete project version
+# (SPD_VERSION, default 0.1.0) - NEVER `latest`. The tag must stay in sync with
+# `pyproject.toml` `[project].version` and the Dockerfile OCI version label.
+#
+# GPU: the image bundles CUDA-enabled torch and the device default is `auto`
+# (GPU first, CPU/MPS fallback). To use a GPU, run with the NVIDIA container
+# runtime instead of `docker compose up` (compose has no portable `--gpus`):
+#
+#   docker run --rm --gpus all \
+#     -v "$PWD/data:/app/data:ro" -v "$PWD/results:/app/results" \
+#     -v "$PWD/cache:/app/cache" -v "$PWD/logs:/app/logs" \
+#     spd:${SPD_VERSION:-0.1.0} run --dataset data/dataset --output results
+#
+# On a host without a GPU (or without `--gpus all`), the same image falls back
+# to CPU automatically; results are identical either way (same weights).
+#
 # One-time host prep so the non-root container (uid 10001) can write to the
 # bind-mounted output dirs (Docker creates missing host dirs as root):
 #   mkdir -p results cache logs && sudo chown -R 10001:10001 results cache logs
 services:
   spd:
-    build: .
-    image: spd:latest
+    build:
+      context: .
+      args:
+        SPD_VERSION: ${SPD_VERSION:-0.1.0}
+    image: spd:${SPD_VERSION:-0.1.0}
     volumes:
       # Dataset is read-only (never mutated by the pipeline).
       - ./data:/app/data:ro
@@ -24,4 +43,5 @@ services:
       - ./cache:/app/cache
       - ./logs:/app/logs
     working_dir: /app
-    command: spd run --dataset data/dataset --output results
+    # `spd` is the ENTRYPOINT, so the command is the subcommand + flags only.
+    command: run --dataset data/dataset --output results

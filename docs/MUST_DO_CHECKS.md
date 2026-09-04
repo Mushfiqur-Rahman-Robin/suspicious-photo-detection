@@ -162,12 +162,26 @@ gh run list -L 3 --json conclusion,status,headSha \
 ## 6. Docker hygiene
 
 - Base images pinned to **exact patch versions** - no moving tags, ever.
-- Smoke-test the image before pushing: build, run `spd run` on a tiny fixture,
-  confirm it exits 0 and produces valid output.
+- Tag the `spd` image with the **concrete project version** (e.g. `spd:0.1.0`,
+  matching `pyproject.toml` `[project].version`) - **never `latest`**.
+- The image bundles CUDA-enabled torch; the pipeline's device default is `auto`
+  (GPU first, CPU/MPS fallback). Verify a GPU run with `docker run --gpus all`,
+  and a CPU fallback run without it - both must produce identical results.
+- Smoke-test the image before pushing: build, run `spd --help`, then `spd run`
+  on a tiny fixture and confirm it exits 0 with valid output.
+- **Always clean up after docker work**: remove unused/orphaned images,
+  containers, build cache, and dangling volumes so nothing is left behind:
+  `docker system prune -f` (add `--volumes` when safe). Confirm the local
+  `docker images`/`docker ps -a` are empty of SPD leftovers after a session.
 
 ```bash
-docker build -t spd:latest .
-docker run --rm spd:latest spd --help
+docker build -t spd:0.1.0 .
+docker run --rm spd:0.1.0 --help
+# GPU-first / CPU-fallback smoke (device default `auto`):
+docker run --rm --gpus all spd:0.1.0 run --dataset data/dataset --output results
+docker run --rm spd:0.1.0 run --dataset data/dataset --output results
+# Cleanup unused / orphaned docker artifacts:
+docker system prune -f
 ```
 
 ## 7. Honesty rules (repeated every session, so written down)
