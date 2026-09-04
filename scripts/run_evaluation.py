@@ -5,8 +5,15 @@ Runs the configured detector against the deterministic synthetic scenarios
 (SPEC §16, TASKS P5.1) and writes the precision/recall/F1 report. This is a
 supporting artifact, not part of the ``spd`` CLI contract (SPEC §7).
 
+The synthetic scenarios are the project's held-out labeled TEST set (SPEC §16):
+the real dataset is unlabeled and the pipeline trains nothing, so no train/test
+split of the real photos exists or is needed. Scenarios are deterministic from
+``--seed`` (defaults to ``settings.random_seed``); passing a different seed
+samples a fresh held-out test set, which is how any future parameter tuning must
+be validated - never on the same seed that gates the release.
+
 Usage:
-    .venv/bin/python -m scripts.run_evaluation [--output results]
+    .venv/bin/python -m scripts.run_evaluation [--output results] [--seed 42]
 """
 
 from __future__ import annotations
@@ -32,11 +39,20 @@ def main() -> None:
         default=None,
         help="Output directory (defaults to settings.output_dir).",
     )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Seed for the held-out synthetic test set (defaults to "
+        "settings.random_seed; a different seed samples a fresh test set).",
+    )
     args = parser.parse_args()
 
     settings = load_settings()
     if args.output is not None:
         settings = settings.model_copy(update={"output_dir": args.output})
+    if args.seed is not None:
+        settings = settings.model_copy(update={"random_seed": args.seed})
     configure_logging(settings.log_level, settings.log_dir)
     logger = get_logger("run_evaluation")
 

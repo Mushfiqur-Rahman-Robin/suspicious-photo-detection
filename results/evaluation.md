@@ -2,6 +2,8 @@
 
 Method: embeddings generated as tight unit-sphere clusters with known injected outliers, then flagged by the configured detector. The real dataset is unlabeled, so these numbers are the only precision/recall/F1 measure available.
 
+Test-set strategy: these scenarios are the held-out synthetic TEST set (SPEC §16). The pipeline trains nothing (pretrained embeddings only, SPEC §2.2), so the unlabeled real photos need no train/test split. The set is deterministic from the configured seed; a different seed (`scripts/run_evaluation.py --seed <n>`) samples a fresh held-out test set, which is how any parameter tuning must be validated - never on the seed that gates the release.
+
 | Scenario | TP | FP | FN | Precision | Recall | F1 |
 |---|---|---|---|---|---|---|
 | single_fake | 1 | 0 | 0 | 1.00 | 1.00 | 1.00 | (PASS)

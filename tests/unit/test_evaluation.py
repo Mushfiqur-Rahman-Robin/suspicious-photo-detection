@@ -65,6 +65,20 @@ def test_scenarios_are_deterministic():
         assert left.ground_truth == right.ground_truth
 
 
+def test_scenarios_differ_across_seeds():
+    """A different seed samples a fresh held-out test set (SPEC §16)."""
+    baseline = build_scenarios(random_seed=42)
+    fresh = build_scenarios(random_seed=2026)
+    assert [scenario.name for scenario in baseline] == [
+        scenario.name for scenario in fresh
+    ]
+    different = any(
+        not np.array_equal(left.embeddings, right.embeddings)
+        for left, right in zip(baseline, fresh, strict=True)
+    )
+    assert different
+
+
 def test_scenario_covers_required_failure_modes():
     scenarios = {
         scenario.name: scenario for scenario in build_scenarios(random_seed=42)
