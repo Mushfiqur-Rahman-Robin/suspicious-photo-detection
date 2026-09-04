@@ -116,7 +116,7 @@ packages = [
     "src/scoring",
     "src/detection",
     "src/pipeline",
-    "src/io",
+    "src/io_layer",
     "src/reporting",
     "src/cli",
     "src/observability",
@@ -199,7 +199,7 @@ known-first-party = [
     "scoring",
     "detection",
     "pipeline",
-    "io",
+    "io_layer",
     "reporting",
     "cli",
     "observability",
@@ -243,7 +243,10 @@ testpaths = ["tests/unit", "tests/integration"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-pythonpath = ["."]
+# Flat src layout: the top-level packages (config, core, embedding, ...) live
+# under `src/`, so src must be on the import path for tests and for `spd` to
+# import cleanly when not installed (ARCHITECTURE §4).
+pythonpath = ["src"]
 addopts = [
     "--strict-markers",
     "--strict-config",
