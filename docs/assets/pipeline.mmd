@@ -1,0 +1,25 @@
+%% SPD pipeline - end-to-end data flow (ARCHITECTURE §6)
+flowchart TD
+    CLI["CLI entrypoint (spd run)"] --> LOAD["Load dataset<br/>(discover outlets + images)"]
+    LOAD --> EMBED["Embed images<br/>(DINOv2/CLIP adapter)"]
+    EMBED --> SCORE["Score similarity<br/>(cosine + centroid + kNN)"]
+    SCORE --> DETECT["Detect outliers<br/>(ensemble + adaptive threshold)"]
+    DETECT --> ASSEMBLE["Assemble per-outlet result<br/>(schema-validated)"]
+    ASSEMBLE --> WRITE["Write output<br/>(results.json + results.csv)"]
+    WRITE --> REPORT["Generate write-up<br/>(metrics + rationale)"]
+
+    subgraph CACHE["Embedding cache (content-addressed)"]
+        C1["get(hash)"] --> C2["put(hash, vector)"]
+    end
+    EMBED <--> CACHE
+
+    subgraph XCUT["Cross-cutting"]
+        CFG["Config (settings.py + .env)"]
+        OBS["Observability (structlog + timing)"]
+    end
+    CLI -.-> CFG
+    LOAD -.-> OBS
+    EMBED -.-> OBS
+    SCORE -.-> OBS
+    DETECT -.-> OBS
+    WRITE -.-> OBS

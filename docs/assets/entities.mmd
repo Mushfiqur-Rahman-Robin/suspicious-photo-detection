@@ -1,0 +1,42 @@
+%% SPD - entity / output-schema model (SPEC §6, SYSTEM_DESIGN §1)
+classDiagram
+    class Outlet {
+        +str outlet_id
+        +list~ImageRecord~ images
+    }
+    class ImageRecord {
+        +str file_name
+        +str path
+        +str content_hash
+        +Embedding embedding?
+    }
+    class Embedding {
+        +numpy.ndarray vector
+        +str model
+        +str model_version
+        +str content_hash
+        +int dim
+    }
+    class OutletResult {
+        +str outlet_id
+        +int total_images
+        +list~FlaggedImage~ flagged_images
+        +list~str~ ranking
+    }
+    class FlaggedImage {
+        +str file_name
+        +float suspicion_score
+        +str reason
+    }
+    class SuspicionProfile {
+        +float centroid_distance
+        +float knn_consensus
+        +float isolation_forest
+        +float fused_score
+    }
+
+    Outlet "1" *-- "1..*" ImageRecord
+    ImageRecord "1" o-- "0..1" Embedding
+    OutletResult "1" *-- "0..*" FlaggedImage
+    OutletResult ..> Outlet : "built from"
+    FlaggedImage ..> SuspicionProfile : "explains"

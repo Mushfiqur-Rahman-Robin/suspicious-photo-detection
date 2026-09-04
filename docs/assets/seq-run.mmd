@@ -1,0 +1,46 @@
+%% SPD pipeline - single-run sequence (ARCHITECTURE §6.1)
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant CLI as CLI (cli)
+    participant RUN as PipelineRunner (pipeline)
+    participant IO as DatasetLoader (io)
+    participant EM as Embedder (embedding)
+    participant EC as EmbeddingCache (io)
+    participant SC as SimilarityScorer (scoring)
+    participant DT as OutlierDetector (detection)
+    participant RW as ResultWriter (io)
+
+    U->>CLI: spd run --dataset data/dataset --output results/results.json
+    CLI->>CLI: parse args + build Settings (config)
+    CLI->>RUN: run(settings)
+
+    RUN->>IO: discover_outlets(path)
+    IO-->>RUN: [Outlet...] (159 outlets / 2042 images)
+
+    loop each outlet (batched)
+        RUN->>EM: embed(images)
+        EM->>EC: get(content_hash) per image
+        alt cache miss
+            EC-->>EM: miss
+            EM->>EM: encode (DINOv2, normalized)
+            EM->>EC: put(content_hash, vector)
+        else cache hit
+            EC-->>EM: hit (vector)
+        end
+        EM-->>RUN: embeddings (N x d)
+
+        RUN->>SC: score(embeddings)
+        SC-->>RUN: similarity matrix + signals (centroid / kNN / IF)
+
+        RUN->>DT: detect(signals)
+        DT-->>RUN: flagged[] + suspicion_score + reason
+
+        RUN->>RUN: assemble OutletResult (schema-validated)
+    end
+
+    RUN->>RW: write(results)
+    RW-->>RUN: results.json + results.csv
+    RUN->>RUN: summarize metrics + write-up
+    RUN-->>CLI: run summary
+    CLI-->>U: exit 0

@@ -1,0 +1,21 @@
+%% SPD - outlier detection decision logic (SPEC §11-§12)
+flowchart TD
+    E["Embeddings<br/>(N × d, one outlet)"] --> SIM["Pairwise cosine<br/>similarity matrix S (N × N)"]
+
+    SIM --> CENT["Signal 1<br/>robust centroid distance<br/>1 − cos(eᵢ, median-centroid)"]
+    SIM --> KNN["Signal 2<br/>kNN consensus<br/>1 − mean top-k similarity"]
+    SIM --> IF["Signal 3<br/>Isolation Forest<br/>anomaly score"]
+
+    CENT --> FUSE["Fuse → suspicion_score<br/>weighted average ∈ [0,1]"]
+    KNN --> FUSE
+    IF --> FUSE
+
+    FUSE --> THRESH["Adaptive threshold<br/>τ = median + k·MAD (with floor)"]
+    THRESH --> FLAG{"score > τ ?"}
+    FLAG -- yes --> FG["FlaggedImage<br/>file_name + score + reason"]
+    FLAG -- no --> OK["Consistent (not flagged)"]
+
+    FUSE --> RANK["ranking = argsort(score, desc)"]
+    FG --> RESULT["OutletResult<br/>(schema-validated)"]
+    OK --> RESULT
+    RANK --> RESULT
