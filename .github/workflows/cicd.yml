@@ -1,0 +1,196 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, staging]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Project coverage gate (SPEC §20 / PLANNING §8): >= 85% core, >= 80% overall.
+  # Raised back to 80 as tests land; a red pipeline is the intended, honest state
+  # until unit/integration suites exist and cover the codebase.
+  MIN_COVERAGE: "80"
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked dev dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+
+  typecheck:
+    name: Type check (mypy + pyright)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked dev dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      - name: mypy (strict)
+        run: mypy src
+      - name: pyright (strict)
+        run: pyright
+
+  test:
+    name: Tests (unit + integration)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked dev dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      # NOTE: the pipeline has no required secrets; v1 Settings need no env
+      # placeholders. If a remote model hub is later added, inject its key here.
+      - name: Run tests (coverage gate >= MIN_COVERAGE)
+        run: pytest --cov --cov-fail-under=${{ env.MIN_COVERAGE }} --junit-xml=pytest-report.xml
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage-report
+          path: htmlcov
+          if-no-files-found: ignore
+      - name: Upload pytest reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pytest-reports
+          path: pytest-*.xml
+          if-no-files-found: ignore
+
+  deadcode:
+    name: Dead code (vulture)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked dev dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      - name: Vulture
+        run: vulture src
+
+  security:
+    name: Security (bandit + pip-audit + trivy + secrets)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked dev dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      - name: Bandit
+        run: bandit -r src -c pyproject.toml
+      - name: pip-audit
+        run: pip-audit -r requirements.txt -r requirements-dev.txt
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: Install detect-secrets
+        run: uv pip install --system detect-secrets
+      - name: Secrets scan
+        run: |
+          if [ -f .secrets.baseline ]; then
+            # detect-secrets-hook FAILS on secrets not present in the committed
+            # baseline (unlike `detect-secrets scan --baseline`, which silently
+            # updates it). The baseline is regenerated with:
+            #   detect-secrets scan --exclude-files "..." > .secrets.baseline
+            detect-secrets-hook --baseline .secrets.baseline \
+              --exclude-files "project_docs/|htmlcov/|\.coverage|coverage\.xml|pytest-report\.xml|pytest-.*\.xml|docs/assets/|\.secrets\.baseline" \
+              $(git ls-files)
+          else
+            echo "No .secrets.baseline found - skipping. Create one with: detect-secrets scan > .secrets.baseline"
+          fi
+
+  docs:
+    name: Docs (mkdocs)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+      - name: Install locked docs dependencies
+        run: uv pip install --system -r requirements-dev.txt
+      - name: Build docs
+        run: mkdocs build --strict
+
+  docker:
+    name: Docker build + smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Validate compose file
+        run: docker compose config --quiet
+      - name: Build image
+        run: docker build -t spd:latest .
+      - name: Smoke test CLI entrypoint
+        run: docker run --rm spd:latest spd --help
+
+  ci-gate:
+    name: CI gate (all checks)
+    needs: [lint, typecheck, test, deadcode, security, docs, docker]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - run: echo "All CI gates passed"
