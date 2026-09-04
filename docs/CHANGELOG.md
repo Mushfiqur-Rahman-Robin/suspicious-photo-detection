@@ -16,7 +16,7 @@ All notable changes to this project are documented here. Format follows
   one-page `write_up.md`.
 - `src/` module tree: `config`, `core`, `embedding`, `scoring`, `detection`,
   `pipeline`, `io_layer`, `reporting`, `cli`, `observability`.
-- Unit + integration + reproducibility test suite (186 tests, ~95% coverage) covering
+- Unit + integration + reproducibility test suite (197 tests, ~94% coverage) covering
   config, schema, loader, cache, scoring, detection, embedders, pipeline, CLI, and
   determinism (two identical runs, cold vs warm cache byte-identical).
 - `scripts/run_evaluation.py` - synthetic-golden precision/recall/F1 report generator
@@ -109,11 +109,17 @@ All notable changes to this project are documented here. Format follows
   work as documented). The runtime image pre-creates `/app/results`, `/app/cache`
   and `/app/logs` owned by the non-root user, and `docker-compose.yml` mounts
   `./logs` alongside `./data`, `./results`, and `./cache`.
-- The container builds from a CPU-only lockfile (`requirements-docker.in` /
-  `requirements-docker.txt`): same pinned torch 2.14.0 / torchvision 0.29.0
-  versions but the CPU wheels, so the image is ~1.5 GB instead of the multi-GB
-  CUDA stack that the PyPI default torch build would pull in. Batch inference
-  already runs on CPU, so results are identical.
+- Signal fusion no longer divides by zero: if every configured fusion weight is
+  zero (or the Isolation Forest is unavailable for a small outlet and only it
+  was weighted), `fused_suspicion_scores` raises a `DetectionError` instead of
+  producing NaN scores (score-in-[0,1] contract preserved).
+- `SIMILARITY_METRIC` is now a bounded `StrEnum` (`cosine`) instead of a free
+  `str`, so an out-of-range value fails fast at the config boundary
+  (type-safety skill).
+- `README.md` and the Dockerfile now document the GPU prerequisite: the bundled
+  CUDA-13 torch wheels need a driver that supports CUDA 13 and a compute
+  capability >= 7.5 GPU; older hosts fall back to CPU automatically (or install
+  the CPU wheel from the PyTorch CPU index).
 
 ### Added (baseline, planning phase)
 - `docs/SPEC.md` - behavioral contracts, FR1-FR10, strict output schema (§6),
