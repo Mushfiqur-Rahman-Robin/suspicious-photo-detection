@@ -1,12 +1,18 @@
 # Suspicious Photo Detection (SPD) - reproducible container run.
 #
 # This pipeline needs NO database or cache service (SPEC §2.2, ED-8): the only
-# "stack" is the app image plus host-mounted dataset/results/cache directories.
-# Bring it up to run the pipeline inside the container without a local env:
+# "stack" is the app image plus host-mounted dataset/results/cache/logs
+# directories. Bring it up to run the pipeline inside the container without a
+# local env:
 #
 #   docker compose up --build
 #
-# Results land in ./results, the embedding cache in ./cache, on the host.
+# Results land in ./results, the embedding cache in ./cache, and structured
+# logs in ./logs, on the host.
+#
+# One-time host prep so the non-root container (uid 10001) can write to the
+# bind-mounted output dirs (Docker creates missing host dirs as root):
+#   mkdir -p results cache logs && sudo chown -R 10001:10001 results cache logs
 services:
   spd:
     build: .
@@ -16,5 +22,6 @@ services:
       - ./data:/app/data:ro
       - ./results:/app/results
       - ./cache:/app/cache
+      - ./logs:/app/logs
     working_dir: /app
     command: spd run --dataset data/dataset --output results
