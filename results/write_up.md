@@ -7,8 +7,9 @@
 
 ## Measured run
 - Outlets: 159; images: 2042; flagged images: 122 (5.97% of images; 77 outlets had flags).
-- Embedding throughput: 5325.0 images/sec (2042 cache hits / 0 misses); device: cpu; seed: 42.
-- Stage wall-clock (sec): load=28.40, embed=0.38, detect=26.75, report=0.01.
+- Embedding throughput: 4.4 images/sec (0 cache hits / 2042 misses); device: cpu; seed: 42.
+- Embedding latency (sec/img, p50/p95/p99): 0.1947 / 0.2695 / 0.3094.
+- Stage wall-clock (sec): load=21.60, embed=467.38, detect=35.37, report=0.01.
 
 ## Rationale & trade-offs
 - No single signal catches every fake: centroid distance is confused by multi-cluster outlets, kNN can miss a tight clique of fakes, and Isolation Forest is unstable at low N - fusing three complementary signals raises precision without any labels.

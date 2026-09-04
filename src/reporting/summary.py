@@ -8,9 +8,12 @@ into the byte-identical ``results.json``/``results.csv`` contract.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+
+import numpy as np
 
 from config.settings import Settings
 from core.exceptions import WriteError
@@ -23,6 +26,11 @@ RUN_SUMMARY_FILENAME = "run_summary.json"
 
 def _default_timings() -> dict[str, float]:
     """Empty timing-map factory (explicitly typed default)."""
+    return {}
+
+
+def _default_percentiles() -> dict[str, float]:
+    """Empty latency-percentile factory for runs with no inference samples."""
     return {}
 
 
@@ -47,7 +55,25 @@ class RunSummary:
     outlets_with_flags: int
     total_flagged_images: int
     stage_timings: dict[str, float] = field(default_factory=_default_timings)
+    embedding_latency_percentiles: dict[str, float] = field(
+        default_factory=_default_percentiles
+    )
     total_wall_seconds: float = 0.0
+
+
+def compute_latency_percentiles(latencies: Sequence[float]) -> dict[str, float]:
+    """Return p50/p95/p99 of per-image embedding latency in seconds.
+
+    Empty when no inference happened (e.g. a fully warm cache or a
+    cache-only report), so a cached re-run never fabricates a latency figure.
+    """
+    if not latencies:
+        return {}
+    samples = np.asarray(latencies, dtype=float)
+    return {
+        f"p{quantile}": round(float(np.percentile(samples, quantile)), 6)
+        for quantile in (50, 95, 99)
+    }
 
 
 def build_run_summary(
@@ -57,11 +83,13 @@ def build_run_summary(
     timings: dict[str, float],
     cache_hits: int,
     cache_misses: int,
+    embedding_latency_seconds: Sequence[float] | None = None,
 ) -> RunSummary:
     """Derive a RunSummary from the settings, results, and stage timings."""
     embed_duration = timings.get("embed", 0.0)
     total_images = sum(result.total_images for result in results)
     embeddings_per_second = total_images / embed_duration if embed_duration > 0 else 0.0
+    latency_samples = embedding_latency_seconds or []
     return RunSummary(
         run_id=run_id,
         started_at=datetime.now(UTC).isoformat(),
@@ -80,6 +108,7 @@ def build_run_summary(
         outlets_with_flags=sum(1 for result in results if result.flagged_images),
         total_flagged_images=sum(len(result.flagged_images) for result in results),
         stage_timings={name: round(duration, 4) for name, duration in timings.items()},
+        embedding_latency_percentiles=compute_latency_percentiles(latency_samples),
         total_wall_seconds=round(sum(timings.values()), 4),
     )
 

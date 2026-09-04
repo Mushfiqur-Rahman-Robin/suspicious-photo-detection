@@ -10,6 +10,7 @@ resize short side to 256, center-crop 224, ImageNet normalization.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, cast
 
@@ -62,11 +63,23 @@ class DinoV2Embedder:
         self._model = model if model is not None else self._load_backend()
         self._model.to(device)
         self._model.eval()
+        self._per_image_latency_seconds: list[float] = []
 
     @property
     def model_name(self) -> str:
         """Canonical model name used in cache keys (ED-6)."""
         return "dino_v2_small"
+
+    @property
+    def per_image_latency_seconds(self) -> list[float]:
+        """Per-image inference latency (sec) from the batches encoded so far.
+
+        One sample per image, derived as ``batch wall time / batch size`` so a
+        batch of ``N`` images contributes ``N`` samples. Used to compute the
+        p50/p95/p99 KPIs in the run summary (SPEC §14). Not part of the
+        ``Embedder`` port: test fakes simply omit it.
+        """
+        return list(self._per_image_latency_seconds)
 
     @property
     def model_version(self) -> str:
@@ -91,10 +104,16 @@ class DinoV2Embedder:
         with torch.inference_mode():
             for start in range(0, tensors.shape[0], self._batch_size):
                 batch = tensors[start : start + self._batch_size].to(self._device)
+                batch_size = batch.shape[0]
+                batch_started_at = time.perf_counter()
                 try:
                     output = self._model(batch)
                 except Exception as exc:
                     raise EmbeddingError(f"DINOv2 inference failed: {exc}") from exc
+                batch_elapsed = time.perf_counter() - batch_started_at
+                self._per_image_latency_seconds.extend(
+                    [batch_elapsed / batch_size] * batch_size
+                )
                 vectors.append(output.detach().cpu())
         stacked = torch.cat(vectors, dim=0).numpy().astype(np.float32)
         return l2_normalize(stacked)

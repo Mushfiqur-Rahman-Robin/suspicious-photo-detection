@@ -1,25 +1,30 @@
 {
-  "cache_hits": 2042,
-  "cache_misses": 0,
+  "cache_hits": 0,
+  "cache_misses": 2042,
   "dataset_dir": "data/dataset",
   "device": "cpu",
   "embedding_dim": 384,
-  "embeddings_per_second": 5324.994076436091,
+  "embedding_latency_percentiles": {
+    "p50": 0.194746,
+    "p95": 0.269453,
+    "p99": 0.309416
+  },
+  "embeddings_per_second": 4.3690125442464725,
   "model": "dino_v2_small",
   "model_version": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
   "outlets_with_flags": 77,
   "output_dir": "results",
   "random_seed": 42,
-  "run_id": "6cfc33564fd94a1daccf68fe66013e32",
+  "run_id": "9663d47aef6f4e4686f766ec1296b925",
   "stage_timings": {
-    "detect": 26.7467,
-    "embed": 0.3835,
-    "load": 28.3992,
-    "report": 0.0057
+    "detect": 35.3729,
+    "embed": 467.3825,
+    "load": 21.6036,
+    "report": 0.0066
   },
-  "started_at": "2026-09-04T13:14:59.353199+00:00",
+  "started_at": "2026-09-04T17:24:59.005887+00:00",
   "total_flagged_images": 122,
   "total_images": 2042,
   "total_outlets": 159,
-  "total_wall_seconds": 55.5351
+  "total_wall_seconds": 524.3657
 }

@@ -8,6 +8,7 @@ a clear, actionable error when the extra is missing.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from typing import Any
 
@@ -35,11 +36,23 @@ class ClipEmbedder:
         self._device = device
         self._batch_size = batch_size
         self._model, self._preprocess, self._backend_version = self._load_backend()
+        self._per_image_latency_seconds: list[float] = []
 
     @property
     def model_name(self) -> str:
         """Canonical model name used in cache keys (ED-6)."""
         return "clip"
+
+    @property
+    def per_image_latency_seconds(self) -> list[float]:
+        """Per-image inference latency (sec) from the batches encoded so far.
+
+        One sample per image, derived as ``batch wall time / batch size`` so a
+        batch of ``N`` images contributes ``N`` samples. Used to compute the
+        p50/p95/p99 KPIs in the run summary (SPEC §14). Not part of the
+        ``Embedder`` port: test fakes simply omit it.
+        """
+        return list(self._per_image_latency_seconds)
 
     @property
     def model_version(self) -> str:
@@ -58,10 +71,16 @@ class ClipEmbedder:
         with torch.inference_mode():
             for start in range(0, preprocessed.shape[0], self._batch_size):
                 batch = preprocessed[start : start + self._batch_size].to(self._device)
+                batch_size = batch.shape[0]
+                batch_started_at = time.perf_counter()
                 try:
                     output = self._model.encode_image(batch)
                 except Exception as exc:
                     raise EmbeddingError(f"CLIP inference failed: {exc}") from exc
+                batch_elapsed = time.perf_counter() - batch_started_at
+                self._per_image_latency_seconds.extend(
+                    [batch_elapsed / batch_size] * batch_size
+                )
                 vectors.append(output)
         stacked = torch.cat(vectors, dim=0).float().cpu().numpy()
         return l2_normalize(stacked)

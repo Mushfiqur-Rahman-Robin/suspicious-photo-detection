@@ -56,6 +56,17 @@ class EmbeddingService:
         """The underlying model adapter (for KPI/logs)."""
         return self._embedder
 
+    @property
+    def embedding_latency_seconds(self) -> list[float]:
+        """Per-image inference latencies collected by the real embedder.
+
+        Real adapters (DINOv2/CLIP) expose ``per_image_latency_seconds``; test
+        fakes implementing only the ``Embedder`` port omit it, in which case an
+        empty list is returned and no latency KPIs are reported.
+        """
+        latencies = getattr(self._embedder, "per_image_latency_seconds", None)
+        return list(latencies) if latencies is not None else []
+
     def embed_records(
         self,
         records: Sequence[ImageRecord],

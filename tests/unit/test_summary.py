@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from config.settings import Settings
 from core.output_schema import FlaggedImage, OutletResult, build_outlet_result
-from reporting.summary import build_run_summary, write_run_summary
+from reporting.summary import (
+    build_run_summary,
+    compute_latency_percentiles,
+    write_run_summary,
+)
 
 
 def _results() -> list[OutletResult]:
@@ -66,3 +72,40 @@ def test_write_run_summary_persists_json(output_dir):
     assert payload["run_id"] == "r"
     assert payload["total_outlets"] == 2
     assert "stage_timings" in payload
+
+
+def test_latency_percentiles_uniform_samples():
+    percentiles = compute_latency_percentiles([0.25] * 5)
+    assert percentiles == {"p50": 0.25, "p95": 0.25, "p99": 0.25}
+
+
+def test_latency_percentiles_ordered_and_bounded():
+    percentiles = compute_latency_percentiles([0.001, 0.005, 0.01, 0.02, 0.04])
+    assert set(percentiles) == {"p50", "p95", "p99"}
+    assert percentiles["p50"] <= percentiles["p95"] <= percentiles["p99"]
+    assert all(0.0 < value < 0.05 for value in percentiles.values())
+
+
+def test_latency_percentiles_empty_when_no_samples():
+    assert compute_latency_percentiles([]) == {}
+
+
+def test_summary_includes_latency_percentiles():
+    summary = build_run_summary(
+        "r",
+        Settings(),
+        _results(),
+        {},
+        0,
+        0,
+        embedding_latency_seconds=[0.01, 0.02, 0.03, 0.04],
+    )
+    assert set(summary.embedding_latency_percentiles) == {"p50", "p95", "p99"}
+    assert summary.embedding_latency_percentiles["p50"] == pytest.approx(
+        0.025, abs=1e-6
+    )
+
+
+def test_summary_latency_percentiles_empty_without_samples():
+    summary = build_run_summary("r", Settings(), _results(), {}, 0, 0)
+    assert summary.embedding_latency_percentiles == {}

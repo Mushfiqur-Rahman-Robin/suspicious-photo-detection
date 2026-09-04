@@ -103,3 +103,10 @@ def test_cache_only_succeeds_after_warm(tmp_path):
 def test_empty_records_return_empty(tmp_path):
     service, _ = _service(tmp_path)
     assert service.embed_records([]) == []
+
+
+def test_service_exposes_empty_latency_without_real_embedder(tmp_path):
+    """Fakes implementing only the Embedder port yield no latency KPIs."""
+    service, _ = _service(tmp_path)
+    service.embed_records(_records(tmp_path))
+    assert service.embedding_latency_seconds == []

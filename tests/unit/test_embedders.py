@@ -76,6 +76,22 @@ def test_dino_embed_images_is_deterministic():
     np.testing.assert_array_equal(first, second)
 
 
+def test_dino_embedder_records_per_image_latency():
+    embedder = _stub_embedder(batch_size=2)
+    images = _sample_images(5)
+    embedder.embed_images(images)
+    latencies = embedder.per_image_latency_seconds
+    assert len(latencies) == len(images)
+    assert all(latency > 0.0 for latency in latencies)
+
+
+def test_dino_embedder_latency_accumulates_across_calls():
+    embedder = _stub_embedder(batch_size=2)
+    embedder.embed_images(_sample_images(2))
+    embedder.embed_images(_sample_images(3))
+    assert len(embedder.per_image_latency_seconds) == 5
+
+
 def test_dino_embed_images_batch_size_does_not_change_result():
     images = _sample_images()
     batched = _stub_embedder(batch_size=2).embed_images(images)

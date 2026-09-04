@@ -161,6 +161,7 @@ class PipelineRunner:
             timings=context.timings,
             cache_hits=self._embedding_service.hit_count,
             cache_misses=self._embedding_service.miss_count,
+            embedding_latency_seconds=self._embedding_service.embedding_latency_seconds,
         )
         write_run_summary(summary, context.output_dir)
         write_up = compose_write_up(

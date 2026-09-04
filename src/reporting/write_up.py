@@ -55,6 +55,8 @@ def compose_write_up(
         f"- Embedding throughput: {summary.embeddings_per_second:.1f} images/sec "
         f"({summary.cache_hits} cache hits / {summary.cache_misses} misses); "
         f"device: {summary.device}; seed: {summary.random_seed}.",
+        f"- Embedding latency (sec/img, p50/p95/p99): "
+        f"{format_latency_percentiles(summary.embedding_latency_percentiles)}.",
         f"- Stage wall-clock (sec): {format_timings(summary)}.",
         "",
         "## Rationale & trade-offs",
@@ -116,4 +118,14 @@ def format_timings(summary: RunSummary) -> str:
         return "n/a (cached report)"
     return ", ".join(
         f"{name}={seconds:.2f}" for name, seconds in summary.stage_timings.items()
+    )
+
+
+def format_latency_percentiles(percentiles: dict[str, float]) -> str:
+    """Render latency percentiles compactly, or state when none were measured."""
+    if not percentiles:
+        return "n/a (no inference in this run)"
+    return (
+        f"{percentiles['p50']:.4f} / {percentiles['p95']:.4f} / "
+        f"{percentiles['p99']:.4f}"
     )
