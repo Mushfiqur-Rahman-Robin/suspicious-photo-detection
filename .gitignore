@@ -228,3 +228,5 @@ __marimo__/
 # Custom
 data/
 project_docs/
+cache/
+logs/
