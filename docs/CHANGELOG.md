@@ -29,6 +29,57 @@ All notable changes to this project are documented here. Format follows
   between console and file.
 
 ### Changed (pipeline implementation)
+- Docker image is now **GPU-first with automatic CPU/MPS fallback**: the container
+  installs the PyPI default CUDA-enabled `torch==2.14.0`/`torchvision==0.29.0` wheels,
+  and the pipeline's `DEVICE=auto` resolves cuda -> mps -> cpu. A host with
+  the NVIDIA container runtime passes `--gpus all` and gets CUDA; a plain CPU host
+  still runs the identical weights (embedding output is bit-identical). Accepted
+  trade-off: the image is several GB larger than the former CPU-only build.
+- **Requirements consolidated:** the Docker build no longer has its own lockfiles -
+  `requirements-docker.in` and `requirements-docker.txt` were deleted (they had
+  duplicated `requirements.txt`, which is compiled from `pyproject.toml`). The
+  container now installs the SAME runtime lockfile as local development
+  (`requirements.txt`), so host and container are guaranteed identical. There is no
+  `*.in` file in the repo: `pyproject.toml` is the single source of truth and every
+  lockfile is compiled from it (`uv pip compile pyproject.toml ...`).
+- Dockerfile deps are now installed with **`uv pip install`** (uv pinned to
+  `0.6.12` via `ghcr.io/astral-sh/uv`, the same resolver that compiled the
+  lockfiles) instead of plain `pip`, with a buildkit cache mount on uv's cache so
+  wheel downloads survive retries and never reach the final image layer.
+- Docker image tag is now the **concrete project version** (`spd:0.1.0`) via the
+  `SPD_VERSION` build arg/compose variable - never `latest`. The version is baked
+  into the OCI `org.opencontainers.image.version` label and must stay in sync with
+  `pyproject.toml` `[project].version` (commitizen bumps both).
+- `docker-compose.yml` `command` fixed: the container `ENTRYPOINT` is already `spd`,
+  so the compose command is now `run --dataset data/dataset --output results`
+  (previously `spd run ...` executed `spd spd run ...` and failed with
+  "No such command 'spd'"). Compose documents the GPU `docker run --gpus all`
+  passthrough and the one-time host ownership prep.
+- `docs/MUST_DO_CHECKS.md` §6 docker smoke command fixed to `docker run --rm
+  spd:0.1.0 --help` (the old `spd:latest spd --help` form was wrong for a `spd`
+  ENTRYPOINT) and now includes the version-tag rule and the standing docker-cleanup
+  instruction (`docker system prune -f` after docker work).
+- `scripts/run_evaluation.py` gains `--seed <n>`: the synthetic scenarios are the
+  held-out labeled TEST set (SPEC §16) - the real dataset is unlabeled and the
+  pipeline trains nothing, so no train/test split of the photos is needed. A
+  different `--seed` samples a fresh held-out test set, the mechanism for validating
+  any future parameter tuning without leaking into the gated test set. The
+  `evaluation.md` report header now records this test-set strategy, and a new unit
+  test asserts scenarios differ across seeds.
+- **Embedding latency KPIs (SPEC §14):** the DINOv2 and CLIP embedders now record
+  per-image inference latency (batch wall time / batch size) and the run summary
+  reports **p50/p95/p99** seconds-per-image in `run_summary.json`
+  (`embedding_latency_percentiles`) and in the `write_up.md` "Measured run"
+  section. The metric is device-agnostic and produced automatically on whichever
+  device the run uses (GPU when available via `auto`, CPU otherwise). A warm-cache
+  run with no inference reports `n/a` rather than fabricating a figure.
+- ASCII-hyphen normalization completed: the last remaining U+2212 math minus signs
+  in `docs/SPEC.md`, `docs/TASKS.md`, the llm-development skill, and the detection
+  diagram were replaced with ASCII `-`; `docs/assets/detection.{mmd,svg}` re-rendered
+  from the mermaid source (never hand-edited).
+- `README.md` now documents both run paths - direct install (`pip install -e .` +
+  `spd run`) and Docker (compose + `--gpus all`), both verified - plus the
+  no-train/test-split evaluation rationale.
 - `src/io` module renamed to **`io_layer`**: a top-level package named `io` cannot be
   imported at runtime because the stdlib `io` module is always resident in
   `sys.modules`. `io_layer` is the same module ARCHITECTURE §4 calls "io".

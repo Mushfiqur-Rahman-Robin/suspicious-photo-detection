@@ -296,8 +296,8 @@ The PRD leaves the method open ("Similarity/scoring method used" and "Outlier de
 
 ### 10.3 Suspicion signals
 
-- **Centroid distance** (`s_centroid`): `1 − e_i · ĉ`, where `ĉ` is the re-normalized coordinate-wise median of the outlet's embeddings (ED-3). Captures "far from the outlet's typical appearance."
-- **kNN consensus** (`s_knn`): `1 − mean_k( top-k S_ij )` with `k = min(5, N−1)` - the mean similarity to the k nearest neighbours. Captures local density; robust when an outlet has several true clusters (ED-10).
+- **Centroid distance** (`s_centroid`): `1 - e_i · ĉ`, where `ĉ` is the re-normalized coordinate-wise median of the outlet's embeddings (ED-3). Captures "far from the outlet's typical appearance."
+- **kNN consensus** (`s_knn`): `1 - mean_k( top-k S_ij )` with `k = min(5, N-1)` - the mean similarity to the k nearest neighbours. Captures local density; robust when an outlet has several true clusters (ED-10).
 - **Isolation Forest** (`s_if`): fit per outlet on the raw (or PCA-reduced) embeddings; the anomaly score normalized to `[0,1]` via min-max over the outlet. Captures general multivariate isolation structure.
 
 ### 10.4 Fusion
@@ -314,7 +314,7 @@ For each outlet, compute the fused `suspicion_score` for every image, then flag 
 
 `suspicion_score(i) > max( median(scores) + k·MAD(scores), SCORE_FLOOR )`
 
-where `MAD = median(|score − median(scores)|)` (scaled by `1.4826` for a normal-consistent estimator). Parameters `k` (default `3.0`) and `SCORE_FLOOR` (default `0.5`) are config (§22).
+where `MAD = median(|score - median(scores)|)` (scaled by `1.4826` for a normal-consistent estimator). Parameters `k` (default `3.0`) and `SCORE_FLOOR` (default `0.5`) are config (§22).
 
 ### 11.2 Justification (summary - full write-up in `docs/ENGINEERING_DECISIONS.md`)
 

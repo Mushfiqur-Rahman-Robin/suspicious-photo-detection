@@ -32,7 +32,7 @@ edits to this file (tick-only, see `docs/MUST_DO_CHECKS.md` §0).
 
 ^- [x] **P2.1** `scoring/similarity.py`: cosine matrix `S` (diagonal excluded). _S: §10.2 · E: ED-2_
 ^- [x] **P2.2** `scoring/centroid.py`: coordinate-wise median centroid, re-normalized. _S: §10.3 · E: ED-3_
-^- [x] **P2.3** `scoring/knn.py`: top-k mean similarity (k = min(5, N−1)). _S: §10.3 · E: ED-10_
+^- [x] **P2.3** `scoring/knn.py`: top-k mean similarity (k = min(5, N-1)). _S: §10.3 · E: ED-10_
 ^- [x] **P2.4** `scoring/fusion.py`: weighted fusion + clamp to `[0,1]`. _S: §10.4 · E: ED-4_
 - **Test:** cosine symmetry/range; centroid robustness vs mean; kNN on synthetic clusters; fusion weights + clamp.
 

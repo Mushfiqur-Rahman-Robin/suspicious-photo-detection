@@ -2,8 +2,8 @@
 flowchart TD
     E["Embeddings<br/>(N × d, one outlet)"] --> SIM["Pairwise cosine<br/>similarity matrix S (N × N)"]
 
-    SIM --> CENT["Signal 1<br/>robust centroid distance<br/>1 − cos(eᵢ, median-centroid)"]
-    SIM --> KNN["Signal 2<br/>kNN consensus<br/>1 − mean top-k similarity"]
+    SIM --> CENT["Signal 1<br/>robust centroid distance<br/>1 - cos(eᵢ, median-centroid)"]
+    SIM --> KNN["Signal 2<br/>kNN consensus<br/>1 - mean top-k similarity"]
     SIM --> IF["Signal 3<br/>Isolation Forest<br/>anomaly score"]
 
     CENT --> FUSE["Fuse → suspicion_score<br/>weighted average ∈ [0,1]"]

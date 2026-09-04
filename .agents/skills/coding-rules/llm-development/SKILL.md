@@ -278,7 +278,7 @@ In addition to the per-request usage row, persist a dedicated cache hit/miss rec
 Semantics for the cost-saved calculation:
 
 - **Exact / semantic cache hit:** no provider call → `actual_cost = 0`, `estimated_cost_saved` = full provider cost the call would have incurred. This is the true saving of semantic caching.
-- **Prefix cache hit:** provider call happened with discounted cached input → `actual_cost` = discounted cost, `estimated_cost_saved` = (full-price prompt cost) − (discounted prompt cost) + any saved latency value you choose to model.
+- **Prefix cache hit:** provider call happened with discounted cached input → `actual_cost` = discounted cost, `estimated_cost_saved` = (full-price prompt cost) - (discounted prompt cost) + any saved latency value you choose to model.
 - **Miss:** `actual_cost` = full price, `estimated_cost_saved = 0`.
 - **Fail-open / bypass:** record why (cache timeout, cache down, non-cacheable response) so you can measure how much savings are being left on the table.
 
