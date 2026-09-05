@@ -34,6 +34,22 @@ def test_defaults_match_spec_catalog(make_settings):
     assert settings.centroid_weight == pytest.approx(1 / 3)
 
 
+def test_output_filename_defaults_are_centralized(make_settings):
+    settings = make_settings()
+    assert settings.results_json_filename == "results.json"
+    assert settings.results_csv_filename == "results.csv"
+    assert settings.run_summary_filename == "run_summary.json"
+    assert settings.write_up_filename == "write_up.md"
+    assert settings.log_filename == "spd.log"
+    assert settings.evaluation_filename == "evaluation.md"
+
+
+def test_output_filenames_are_overrideable(make_settings):
+    settings = make_settings(results_json_filename="out.json", log_filename="run.log")
+    assert settings.results_json_filename == "out.json"
+    assert settings.log_filename == "run.log"
+
+
 def test_fusion_weights_must_sum_to_one(make_settings):
     with pytest.raises(ValidationError):
         make_settings(centroid_weight=0.5, knn_weight=0.5, isolation_forest_weight=0.1)

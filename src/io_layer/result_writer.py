@@ -12,24 +12,25 @@ import csv
 import json
 from pathlib import Path
 
+from config.settings import Settings
 from core.entities import WriteSummary
 from core.exceptions import WriteError
 from core.output_schema import OutletResult
 from observability.logging import get_logger
 
-RESULTS_JSON_FILENAME = "results.json"
-RESULTS_CSV_FILENAME = "results.csv"
-
 
 class ResultWriter:
     """Persists the full per-outlet result set to an output directory.
 
-    Validates on write: a result that violates the schema would fail here
+    The JSON and CSV file names come from the injected Settings (SPEC §18), so
+    the artifact names are centralized in ``settings.py`` and never hardcoded
+    here. Validates on write: a result that violates the schema would fail here
     rather than producing an invalid deliverable (ED-7).
     """
 
-    def __init__(self) -> None:
-        """Prepare the module logger for write progress events."""
+    def __init__(self, settings: Settings) -> None:
+        """Bind the settings (for artifact names) and prepare the logger."""
+        self._settings = settings
         self._logger = get_logger("result_writer")
 
     def write_results(
@@ -37,10 +38,10 @@ class ResultWriter:
         results: list[OutletResult],
         output_dir: Path,
     ) -> WriteSummary:
-        """Write ``results.json`` and ``results.csv``, returning the paths."""
+        """Write the results JSON and CSV (names from settings), returning the paths."""
         output_dir.mkdir(parents=True, exist_ok=True)
-        json_path = output_dir / RESULTS_JSON_FILENAME
-        csv_path = output_dir / RESULTS_CSV_FILENAME
+        json_path = output_dir / self._settings.results_json_filename
+        csv_path = output_dir / self._settings.results_csv_filename
         try:
             json_path.write_text(
                 self._json_payload(results),

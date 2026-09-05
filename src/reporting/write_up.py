@@ -13,11 +13,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from config.settings import Settings
 from core.exceptions import WriteError
 from observability.logging import get_logger
 from reporting.summary import RunSummary
-
-WRITE_UP_FILENAME = "write_up.md"
 
 
 def compose_write_up(
@@ -111,9 +110,9 @@ def compose_write_up(
     return write_up
 
 
-def write_write_up(write_up: str, output_dir: Path) -> Path:
-    """Write the write-up to ``output_dir/write_up.md`` and return its path."""
-    path = output_dir / WRITE_UP_FILENAME
+def write_write_up(write_up: str, output_dir: Path, settings: Settings) -> Path:
+    """Write the write-up under ``output_dir`` (name from settings) and return its path."""
+    path = output_dir / settings.write_up_filename
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
         path.write_text(write_up, encoding="utf-8")

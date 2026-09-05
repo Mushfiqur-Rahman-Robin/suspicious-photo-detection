@@ -67,7 +67,7 @@ def test_summary_version_uses_dino_hub_ref():
 
 def test_write_run_summary_persists_json(output_dir):
     summary = build_run_summary("r", Settings(), _results(), {"load": 0.5}, 1, 1)
-    path = write_run_summary(summary, output_dir)
+    path = write_run_summary(summary, output_dir, Settings())
     payload = json.loads(path.read_text(encoding="utf-8"))
     assert payload["run_id"] == "r"
     assert payload["total_outlets"] == 2

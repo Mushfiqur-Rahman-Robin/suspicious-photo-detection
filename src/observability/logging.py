@@ -52,12 +52,15 @@ def _json_formatter() -> structlog.stdlib.ProcessorFormatter:
 def configure_logging(
     log_level: LogLevel,
     log_dir: Path | None = None,
+    log_filename: str = "spd.log",
 ) -> None:
     """Configure the structlog pipeline for this process.
 
     The console stream always gets a human-readable rendering; when ``log_dir``
     is given, the same events are also written as JSON lines to
-    ``log_dir/spd.log`` (the directory is created if missing). The configured
+    ``log_dir/<log_filename>`` (the directory is created if missing). The
+    filename default matches the settings default; callers centralize the name
+    in Settings by passing ``settings.log_filename`` (SPEC §18). The configured
     level applies uniformly to both sinks via the root logger.
     """
     level_number = int(getattr(logging, log_level.value, logging.INFO))
@@ -69,7 +72,7 @@ def configure_logging(
 
     if log_dir is not None:
         log_dir.mkdir(parents=True, exist_ok=True)
-        file_handler = logging.FileHandler(log_dir / "spd.log", encoding="utf-8")
+        file_handler = logging.FileHandler(log_dir / log_filename, encoding="utf-8")
         file_handler.setFormatter(_json_formatter())
         handlers.append(file_handler)
 

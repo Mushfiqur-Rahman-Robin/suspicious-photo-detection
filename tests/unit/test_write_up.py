@@ -56,13 +56,25 @@ def test_write_up_respects_max_chars():
 
 
 def test_write_write_up_persists_file(output_dir):
-    path = write_write_up(compose_write_up(_summary(), max_chars=10000), output_dir)
+    path = write_write_up(
+        compose_write_up(_summary(), max_chars=10000),
+        output_dir,
+        Settings(),
+    )
     assert path.name == "write_up.md"
     assert path.read_text(encoding="utf-8").startswith("# Suspicious Photo Detection")
+
+
+def test_write_write_up_respects_configured_filename(output_dir):
+    settings = Settings(write_up_filename="custom_write_up.md")
+    path = write_write_up("content", output_dir, settings)
+    assert path.name == "custom_write_up.md"
+    assert (output_dir / "custom_write_up.md").is_file()
+    assert not (output_dir / "write_up.md").exists()
 
 
 def test_write_write_up_error_when_output_is_a_file(tmp_path):
     target = tmp_path / "blocked"
     target.write_text("i am a file")
     with pytest.raises(WriteError):
-        write_write_up("content", target)
+        write_write_up("content", target, Settings())

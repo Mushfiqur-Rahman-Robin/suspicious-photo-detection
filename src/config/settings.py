@@ -113,6 +113,18 @@ class Settings(BaseSettings):
     score_decimals: int = 4
     write_up_max_chars: int = 6000
 
+    # --- Output artifact file names (SPEC §22.3) ----------------------------
+    # The names of every on-disk artifact are declared once here so no feature
+    # module hardcodes a filename (SPEC §18 / config-management skill). They are
+    # committed non-secret tunables with stable defaults; a run only changes
+    # them via an explicit override.
+    results_json_filename: str = "results.json"
+    results_csv_filename: str = "results.csv"
+    run_summary_filename: str = "run_summary.json"
+    write_up_filename: str = "write_up.md"
+    log_filename: str = "spd.log"
+    evaluation_filename: str = "evaluation.md"
+
     # --- Untrusted-input bounds (SPEC §17) ----------------------------------
     max_image_dimension: int = 8192
     max_image_pixels: int = 50_000_000

@@ -27,7 +27,7 @@ def test_ensemble_detector_satisfies_detector_port():
 
 
 def test_concrete_writer_satisfies_writer_port():
-    assert isinstance(ConcreteResultWriter(), ResultWriter)
+    assert isinstance(ConcreteResultWriter(Settings()), ResultWriter)
 
 
 def test_create_detector_default_is_ensemble():
@@ -50,13 +50,24 @@ def test_configure_logging_and_logger_work():
 
 
 def test_configure_logging_writes_structured_log_file(tmp_path):
-    configure_logging(Settings().log_level, log_dir=tmp_path)
+    configure_logging(
+        Settings().log_level,
+        log_dir=tmp_path,
+        log_filename=Settings().log_filename,
+    )
     get_logger("test").info("log_file_probe", probe="value")
     log_path = tmp_path / "spd.log"
     assert log_path.is_file()
     line = log_path.read_text(encoding="utf-8").strip()
     assert '"event": "log_file_probe"' in line
     assert '"probe": "value"' in line
+
+
+def test_configure_logging_respects_configured_log_filename(tmp_path):
+    configure_logging(Settings().log_level, log_dir=tmp_path, log_filename="custom.log")
+    get_logger("test").info("log_file_probe", probe="value")
+    assert (tmp_path / "custom.log").is_file()
+    assert not (tmp_path / "spd.log").exists()
 
 
 def test_run_context_binding_and_clearing():

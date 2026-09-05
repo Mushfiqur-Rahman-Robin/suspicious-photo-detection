@@ -53,7 +53,11 @@ def main() -> None:
         settings = settings.model_copy(update={"output_dir": args.output})
     if args.seed is not None:
         settings = settings.model_copy(update={"random_seed": args.seed})
-    configure_logging(settings.log_level, settings.log_dir)
+    configure_logging(
+        settings.log_level,
+        settings.log_dir,
+        settings.log_filename,
+    )
     logger = get_logger("run_evaluation")
 
     detector = create_detector(settings)
@@ -62,7 +66,7 @@ def main() -> None:
 
     output_dir = settings.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    evaluation_path = output_dir / "evaluation.md"
+    evaluation_path = output_dir / settings.evaluation_filename
     evaluation_path.write_text(report, encoding="utf-8")
     for name, entry in metrics.items():
         logger.info(

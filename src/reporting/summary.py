@@ -21,8 +21,6 @@ from core.output_schema import OutletResult
 from embedding.device import resolve_torch_device
 from observability.logging import get_logger
 
-RUN_SUMMARY_FILENAME = "run_summary.json"
-
 
 def _default_timings() -> dict[str, float]:
     """Empty timing-map factory (explicitly typed default)."""
@@ -113,10 +111,12 @@ def build_run_summary(
     )
 
 
-def write_run_summary(summary: RunSummary, output_dir: Path) -> Path:
-    """Write ``run_summary.json`` under ``output_dir`` and return its path."""
+def write_run_summary(
+    summary: RunSummary, output_dir: Path, settings: Settings
+) -> Path:
+    """Write the run summary under ``output_dir`` (name from settings) and return its path."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    path = output_dir / RUN_SUMMARY_FILENAME
+    path = output_dir / settings.run_summary_filename
     try:
         path.write_text(json_dumps(summary), encoding="utf-8")
     except OSError as exc:

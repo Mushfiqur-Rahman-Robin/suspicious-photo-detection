@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import json
 
+from config.settings import Settings
 from core.output_schema import FlaggedImage, OutletResult, build_outlet_result
 from io_layer.result_writer import ResultWriter
 
@@ -34,7 +35,7 @@ def _clean_outlet() -> OutletResult:
 
 
 def test_json_contains_every_outlet_exactly_once(output_dir):
-    writer = ResultWriter()
+    writer = ResultWriter(Settings())
     writer.write_results([_flagged_outlet(), _clean_outlet()], output_dir)
     payload = json.loads((output_dir / "results.json").read_text(encoding="utf-8"))
     assert [entry["outlet_id"] for entry in payload] == ["outlet_0001", "outlet_0002"]
@@ -45,7 +46,7 @@ def test_json_contains_every_outlet_exactly_once(output_dir):
 
 
 def test_json_is_reproducible_across_writes(output_dir):
-    writer = ResultWriter()
+    writer = ResultWriter(Settings())
     writer.write_results([_flagged_outlet(), _clean_outlet()], output_dir)
     first = (output_dir / "results.json").read_bytes()
     writer.write_results([_flagged_outlet(), _clean_outlet()], output_dir)
@@ -54,7 +55,7 @@ def test_json_is_reproducible_across_writes(output_dir):
 
 
 def test_csv_has_header_and_rows(output_dir):
-    writer = ResultWriter()
+    writer = ResultWriter(Settings())
     writer.write_results([_flagged_outlet(), _clean_outlet()], output_dir)
     rows = list(csv.reader((output_dir / "results.csv").read_text().splitlines()))
     assert rows[0] == [
@@ -72,7 +73,21 @@ def test_csv_has_header_and_rows(output_dir):
 
 
 def test_write_summary_reports_paths_and_count(output_dir):
-    summary = ResultWriter().write_results([_flagged_outlet()], output_dir)
+    summary = ResultWriter(Settings()).write_results([_flagged_outlet()], output_dir)
     assert summary.json_path.name == "results.json"
     assert summary.csv_path.name == "results.csv"
     assert summary.outlet_count == 1
+
+
+def test_filenames_are_centralized_in_settings(output_dir):
+    settings = Settings(
+        results_json_filename="custom_results.json",
+        results_csv_filename="custom_results.csv",
+    )
+    summary = ResultWriter(settings).write_results([_flagged_outlet()], output_dir)
+    assert summary.json_path.name == "custom_results.json"
+    assert summary.csv_path.name == "custom_results.csv"
+    assert (output_dir / "custom_results.json").is_file()
+    assert (output_dir / "custom_results.csv").is_file()
+    assert not (output_dir / "results.json").exists()
+    assert not (output_dir / "results.csv").exists()

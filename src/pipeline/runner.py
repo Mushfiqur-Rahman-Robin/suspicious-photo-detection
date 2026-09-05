@@ -39,8 +39,6 @@ from pipeline.stage import (
 from reporting.summary import build_run_summary, write_run_summary
 from reporting.write_up import compose_write_up, write_write_up
 
-RESULTS_JSON_FILENAME = "results.json"
-
 
 class PipelineRunner:
     """Facade over the staged pipeline; the single entry point for all CLI commands.
@@ -52,7 +50,11 @@ class PipelineRunner:
 
     def __init__(self, settings: Settings, embedder: Embedder | None = None) -> None:
         """Wire all ports (loader/embedder+cache/detector/writer) and bind the run context."""
-        configure_logging(settings.log_level, settings.log_dir)
+        configure_logging(
+            settings.log_level,
+            settings.log_dir,
+            settings.log_filename,
+        )
         self._settings = settings
         self._logger = get_logger("pipeline_runner")
         self._run_id = uuid4().hex
@@ -79,7 +81,7 @@ class PipelineRunner:
         )
         self._loader = loader
         self._detector = create_detector(settings)
-        self._writer = ResultWriter()
+        self._writer = ResultWriter(settings)
 
     def run_full(self) -> None:
         """Run load -> embed -> detect -> report and summarize (``spd run``)."""
@@ -112,7 +114,7 @@ class PipelineRunner:
 
     def run_report(self) -> None:
         """Regenerate JSON + CSV + write-up from cached results (``spd report``)."""
-        results_json = self._settings.output_dir / RESULTS_JSON_FILENAME
+        results_json = self._settings.output_dir / self._settings.results_json_filename
         if not results_json.is_file():
             raise WriteError(
                 f"no cached results found at {results_json}; run `spd run` or `spd detect` first"
@@ -131,7 +133,7 @@ class PipelineRunner:
             summary,
             max_chars=self._settings.write_up_max_chars,
         )
-        write_write_up(write_up, self._settings.output_dir)
+        write_write_up(write_up, self._settings.output_dir, self._settings)
         self._logger.info(
             "report_regenerated",
             outlet_count=len(results),
@@ -163,12 +165,12 @@ class PipelineRunner:
             cache_misses=self._embedding_service.miss_count,
             embedding_latency_seconds=self._embedding_service.embedding_latency_seconds,
         )
-        write_run_summary(summary, context.output_dir)
+        write_run_summary(summary, context.output_dir, self._settings)
         write_up = compose_write_up(
             summary,
             max_chars=self._settings.write_up_max_chars,
         )
-        write_write_up(write_up, context.output_dir)
+        write_write_up(write_up, context.output_dir, self._settings)
         clear_run_context()
         self._logger.info(
             "pipeline_complete",
