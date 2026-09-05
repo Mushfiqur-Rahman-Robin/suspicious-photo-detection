@@ -29,11 +29,18 @@ def test_write_up_covers_required_sections():
     for section in (
         "## Method",
         "## Measured run",
+        "## Validation",
         "## Rationale",
         "## Scalability",
         "## Limitations",
     ):
         assert section in write_up
+
+
+def test_write_up_documents_qualitative_review():
+    write_up = compose_write_up(_summary(), max_chars=10000)
+    assert "Qualitative review of real flags" in write_up
+    assert "borrowed-photo" in write_up
 
 
 def test_write_up_is_grounded_in_measured_numbers():

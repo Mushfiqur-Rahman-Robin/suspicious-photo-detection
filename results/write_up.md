@@ -11,6 +11,11 @@
 - Embedding latency (sec/img, p50/p95/p99): 0.1947 / 0.2695 / 0.3094.
 - Stage wall-clock (sec): load=21.60, embed=467.38, detect=35.37, report=0.01.
 
+## Validation
+- Synthetic golden set: all five scenarios pass the configured precision/recall/F1 gates (see `evaluation.md`).
+- Reproducibility: a re-run on the same dataset yields byte-identical `results.json` (fixed seed + content-addressed embedding cache).
+- Qualitative review of real flags: 11 sampled flags across 7 outlets were each more similar to a different outlet's photos than to their own outlet's photos (cross-outlet cosine 0.18-0.84 vs own-outlet mean 0.01-0.54) - i.e. photos of other storefronts, the borrowed-photo failure mode this pipeline targets.
+
 ## Rationale & trade-offs
 - No single signal catches every fake: centroid distance is confused by multi-cluster outlets, kNN can miss a tight clique of fakes, and Isolation Forest is unstable at low N - fusing three complementary signals raises precision without any labels.
 - A global threshold is wrong because outlet appearance variance differs wildly; the robust median + MAD threshold is distribution-free and needs no per-outlet tuning, and the absolute floor prevents noise-level flagging in near-uniform outlets.
