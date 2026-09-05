@@ -110,6 +110,15 @@ All notable changes to this project are documented here. Format follows
 - The PRD file was renamed to `project_docs/Suspicious_Photo_Detection_PRD.pdf`
   and every reference across the repo updated; `.env` re-synced to the current
   `.env.example` (placeholders only).
+- **Output artifact file names centralized in `Settings`** (SPEC §18/§22.3): the
+  on-disk artifact names are now declared once in `src/config/settings.py`
+  (`results_json_filename`, `results_csv_filename`, `run_summary_filename`,
+  `write_up_filename`, `log_filename`, `evaluation_filename`) instead of being
+  hardcoded per module. `ResultWriter`, `write_run_summary`, `write_write_up`,
+  `configure_logging`, the pipeline runner, and `scripts/run_evaluation.py` read
+  them from the injected `Settings`, so a custom filename override flows through
+  every writer without touching feature code. Defaults are unchanged, so existing
+  outputs are byte-identical.
 
 ### Fixed (pipeline implementation)
 - Docker image now installs the project package itself, so the `spd` console
